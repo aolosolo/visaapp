@@ -36,19 +36,43 @@ const visaInfoMap = {
   },
 };
 
+const countryDisplayMap: { [key: string]: string } = {
+  pk: 'Pakistan',
+  af: 'Afghanistan',
+  bd: 'Bangladesh',
+  cn: 'China',
+  in: 'India',
+  id: 'Indonesia',
+  ir: 'Iran',
+  iq: 'Iraq',
+  jp: 'Japan',
+  kz: 'Kazakhstan',
+  my: 'Malaysia',
+  mn: 'Mongolia',
+  np: 'Nepal',
+  om: 'Oman',
+  ph: 'Philippines',
+  qa: 'Qatar',
+  sa: 'Saudi Arabia',
+  sg: 'Singapore',
+  kr: 'South Korea',
+  lk: 'Sri Lanka',
+  sy: 'Syria',
+  th: 'Thailand',
+  tr: 'Turkey',
+  ae: 'United Arab Emirates',
+  vn: 'Vietnam',
+  usa: "United States",
+  ca: "Canada",
+  gb: "United Kingdom",
+  au: "Australia",
+  other: "Other"
+};
+
 export function VisaConfirmation({ visaDetails, onConfirm, onEdit }: VisaConfirmationProps) {
   const { citizenship, travelReason } = visaDetails;
   const info = visaInfoMap[travelReason];
   
-  const countryDisplayMap: { [key: string]: string } = {
-    usa: "United States",
-    canada: "Canada",
-    uk: "United Kingdom",
-    australia: "Australia",
-    other: "Other"
-  }
-
-
   return (
     <Card className="w-full shadow-lg">
       <CardHeader>

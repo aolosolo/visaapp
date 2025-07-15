@@ -18,6 +18,42 @@ const travelReasons = [
   { id: "study", label: "Study", icon: GraduationCap },
 ];
 
+const asianCountries = [
+    { code: 'pk', name: 'Pakistan', flag: '🇵🇰' },
+    { code: 'af', name: 'Afghanistan', flag: '🇦🇫' },
+    { code: 'bd', name: 'Bangladesh', flag: '🇧🇩' },
+    { code: 'cn', name: 'China', flag: '🇨🇳' },
+    { code: 'in', name: 'India', flag: '🇮🇳' },
+    { code: 'id', name: 'Indonesia', flag: '🇮🇩' },
+    { code: 'ir', name: 'Iran', flag: '🇮🇷' },
+    { code: 'iq', name: 'Iraq', flag: '🇮🇶' },
+    { code: 'jp', name: 'Japan', flag: '🇯🇵' },
+    { code: 'kz', name: 'Kazakhstan', flag: '🇰🇿' },
+    { code: 'my', name: 'Malaysia', flag: '🇲🇾' },
+    { code: 'mn', name: 'Mongolia', flag: '🇲🇳' },
+    { code: 'np', name: 'Nepal', flag: '🇳🇵' },
+    { code: 'om', name: 'Oman', flag: '🇴🇲' },
+    { code: 'ph', name: 'Philippines', flag: '🇵🇭' },
+    { code: 'qa', name: 'Qatar', flag: '🇶🇦' },
+    { code: 'sa', name: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: 'sg', name: 'Singapore', flag: '🇸🇬' },
+    { code: 'kr', name: 'South Korea', flag: '🇰🇷' },
+    { code: 'lk', name: 'Sri Lanka', flag: '🇱🇰' },
+    { code: 'sy', name: 'Syria', flag: '🇸🇾' },
+    { code: 'th', name: 'Thailand', flag: '🇹🇭' },
+    { code: 'tr', name: 'Turkey', flag: '🇹🇷' },
+    { code: 'ae', name: 'United Arab Emirates', flag: '🇦🇪' },
+    { code: 'vn', name: 'Vietnam', flag: '🇻🇳' },
+];
+
+const otherCountries = [
+    { code: 'usa', name: 'United States', flag: '🇺🇸' },
+    { code: 'ca', name: 'Canada', flag: '🇨🇦' },
+    { code: 'gb', name: 'United Kingdom', flag: '🇬🇧' },
+    { code: 'au', name: 'Australia', flag: '🇦🇺' },
+    { code: 'other', name: 'Other', flag: '🏳️' },
+]
+
 type TravelReason = "tourism" | "business" | "work" | "study";
 
 export interface VisaDetails {
@@ -52,6 +88,8 @@ export function VisaPreApplication({ onContinue }: VisaPreApplicationProps) {
     });
   };
 
+  const allCountries = [...asianCountries, ...otherCountries];
+
   return (
     <Card className="w-full shadow-lg">
       <CardContent className="p-8 space-y-6">
@@ -64,11 +102,14 @@ export function VisaPreApplication({ onContinue }: VisaPreApplicationProps) {
               <SelectValue placeholder="Select your country" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="usa">United States</SelectItem>
-              <SelectItem value="canada">Canada</SelectItem>
-              <SelectItem value="uk">United Kingdom</SelectItem>
-              <SelectItem value="australia">Australia</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+                {allCountries.map((country) => (
+                    <SelectItem key={country.code} value={country.code}>
+                        <div className="flex items-center gap-2">
+                            <span>{country.flag}</span>
+                            <span>{country.name}</span>
+                        </div>
+                    </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
