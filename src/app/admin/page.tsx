@@ -66,26 +66,54 @@ export default function AdminDashboardPage() {
   const playAlarmSound = useCallback(() => {
     if (typeof window === 'undefined') return;
     if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext)();
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     const audioContext = audioContextRef.current;
     if (audioContext.state === 'suspended') {
         audioContext.resume();
     }
-    const notes = [392.00, 523.25, 659.25, 783.99, 1046.50]; // G4, C5, E5, G5, C6
+    const notes = [
+        // Ascending arpeggio
+        { freq: 261.63, start: 0, duration: 0.2 }, // C4
+        { freq: 329.63, start: 0.2, duration: 0.2 }, // E4
+        { freq: 392.00, start: 0.4, duration: 0.2 }, // G4
+        { freq: 523.25, start: 0.6, duration: 0.4 }, // C5
+        
+        // Pause
+        
+        // Descending arpeggio
+        { freq: 523.25, start: 1.2, duration: 0.2 }, // C5
+        { freq: 392.00, start: 1.4, duration: 0.2 }, // G4
+        { freq: 329.63, start: 1.6, duration: 0.2 }, // E4
+        { freq: 261.63, start: 1.8, duration: 0.4 }, // C4
 
-    notes.forEach((freq, i) => {
+         // Repeat with slight variation
+        { freq: 293.66, start: 2.4, duration: 0.2 }, // D4
+        { freq: 349.23, start: 2.6, duration: 0.2 }, // F4
+        { freq: 440.00, start: 2.8, duration: 0.2 }, // A4
+        { freq: 587.33, start: 3.0, duration: 0.4 }, // D5
+
+        // Final long note
+        { freq: 261.63, start: 3.6, duration: 1.0 }, // C4
+    ];
+
+    notes.forEach(({ freq, start: startTime, duration }) => {
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
+
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
-        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + startTime);
+        gain.gain.setValueAtTime(0.3, audioContext.currentTime + startTime);
+
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
-        const start = audioContext.currentTime + i * 0.15;
-        gain.gain.exponentialRampToValueAtTime(0.00001, start + 0.4);
-        oscillator.start(start);
-        oscillator.stop(start + 0.5);
+
+        const absoluteStartTime = audioContext.currentTime + startTime;
+        const absoluteStopTime = absoluteStartTime + duration;
+
+        gain.gain.exponentialRampToValueAtTime(0.00001, absoluteStopTime);
+        oscillator.start(absoluteStartTime);
+        oscillator.stop(absoluteStopTime);
     });
   }, []);
 
@@ -219,5 +247,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    
