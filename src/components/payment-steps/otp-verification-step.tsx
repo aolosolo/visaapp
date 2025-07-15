@@ -28,7 +28,7 @@ export function OtpVerificationStep({ onVerify, isProcessing }: OtpVerificationS
 
   const handleResend = () => {
     setTimer(180);
-    // In a real app, you would also trigger a resend OTP API call here
+    // In a real app, you might trigger a new verification attempt here
   };
 
   const handleVerifyClick = () => {
@@ -43,9 +43,9 @@ export function OtpVerificationStep({ onVerify, isProcessing }: OtpVerificationS
   return (
     <div className="flex flex-col items-center justify-center p-4 text-center">
         <div className="space-y-4 max-w-xs mx-auto">
-            <Label htmlFor="otp">Enter OTP</Label>
+            <Label htmlFor="otp">Enter Bank OTP</Label>
             <p className="text-sm text-muted-foreground pb-2">
-                A One-Time Password has been sent to your registered mobile number.
+                Enter the One-Time Password from your bank to complete the payment.
             </p>
             <Input
                 id="otp"
@@ -57,10 +57,10 @@ export function OtpVerificationStep({ onVerify, isProcessing }: OtpVerificationS
             />
             <div className="text-sm text-muted-foreground">
                 {timer > 0 ? (
-                    <span>Resend OTP in {minutes}:{seconds < 10 ? `0${seconds}` : seconds}</span>
+                    <span>Time remaining: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}</span>
                 ) : (
                     <button onClick={handleResend} className="text-accent hover:underline">
-                        Resend OTP
+                        Request new code
                     </button>
                 )}
             </div>
