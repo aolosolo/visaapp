@@ -1,65 +1,110 @@
 
 "use client";
 
-import { CreditCard, Landmark, Lock } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight, Lock, Loader2 } from 'lucide-react';
+import { UserDetailsStep } from '@/components/payment-steps/user-details-step';
+import { PaymentDetailsStep } from '@/components/payment-steps/payment-details-step';
+import { OtpVerificationStep } from '@/components/payment-steps/otp-verification-step';
+import { useToast } from '@/hooks/use-toast';
+import { useFormContext } from 'react-hook-form';
 
-export function PaymentStep() {
+const paymentSteps = [
+  { id: 1, title: 'Confirm Your Details' },
+  { id: 2, title: 'Payment Information' },
+  { id: 3, title: 'Verify Payment' },
+];
+
+interface PaymentStepProps {
+  onBack: () => void;
+  onSubmit: () => void;
+}
+
+export function PaymentStep({ onBack, onSubmit }: PaymentStepProps) {
+  const [currentPaymentStep, setCurrentPaymentStep] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+  const { getValues } = useFormContext();
+
+  const handleNext = () => {
+    if (currentPaymentStep === 1) {
+       // logic for user details validation can go here if needed
+       setCurrentPaymentStep(2);
+    } else if (currentPaymentStep === 2) {
+       // logic for payment details validation
+       console.log("Card details entered, proceeding to OTP.");
+       setCurrentPaymentStep(3);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentPaymentStep > 1) {
+      setCurrentPaymentStep(currentPaymentStep - 1);
+    } else {
+      onBack(); // Go back to the previous main form step
+    }
+  };
+
+  const handleVerify = () => {
+    setIsProcessing(true);
+    console.log("Verifying OTP and submitting application...");
+    setTimeout(() => {
+        setIsProcessing(false);
+        toast({
+            title: "Payment Successful!",
+            description: "Your payment has been verified."
+        });
+        onSubmit(); // Call the final form submission
+    }, 2000);
+  }
+
+  const renderStepContent = () => {
+    const formData = getValues();
+    switch (currentPaymentStep) {
+      case 1:
+        return <UserDetailsStep formData={formData} />;
+      case 2:
+        return <PaymentDetailsStep />;
+      case 3:
+        return <OtpVerificationStep />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Select Payment Method</h3>
-          <RadioGroup defaultValue="card" className="grid grid-cols-1 gap-4">
-            <div>
-              <RadioGroupItem value="card" id="card" className="peer sr-only" />
-              <Label
-                htmlFor="card"
-                className="flex items-center justify-start gap-4 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-              >
-                <CreditCard className="h-6 w-6" />
-                Credit/Debit Card
-              </Label>
-            </div>
-            <div>
-              <RadioGroupItem value="bank" id="bank" className="peer sr-only" />
-              <Label
-                htmlFor="bank"
-                className="flex items-center justify-start gap-4 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-              >
-                <Landmark className="h-6 w-6" />
-                Bank Transfer
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-        <Card className="bg-primary/5 border-primary/20 flex flex-col">
-          <CardHeader>
-            <CardTitle>Secure Payment</CardTitle>
-            <CardDescription>
-              Finalize your application by completing the payment.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-medium">Visa Service Fee</span>
-              <span className="text-2xl font-bold text-primary">€116.00</span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">This fee is non-refundable.</p>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-2">
-            <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-              <Lock className="mr-2" />
-              Pay Visa Fees
-            </Button>
-            <p className="text-center text-xs text-muted-foreground">
-              By clicking "Pay Visa Fees", you agree to our terms of service.
-            </p>
-          </CardFooter>
-        </Card>
+      <h3 className="text-lg font-semibold text-center">{paymentSteps[currentPaymentStep - 1].title}</h3>
+      <div className="min-h-[280px]">
+        {renderStepContent()}
+      </div>
+      <div className="flex justify-between">
+        <Button type="button" variant="outline" onClick={handleBack}>
+          <ArrowLeft className="mr-2" />
+          Back
+        </Button>
+        
+        {currentPaymentStep < 3 ? (
+          <Button type="button" onClick={handleNext} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+             {currentPaymentStep === 2 ? 'Proceed to Verify' : 'Next'}
+            <ArrowRight className="ml-2" />
+          </Button>
+        ) : (
+          <Button type="button" onClick={handleVerify} className="bg-green-600 hover:bg-green-700 text-white" disabled={isProcessing}>
+            {isProcessing ? (
+                <>
+                    <Loader2 className="mr-2 animate-spin" />
+                    Processing...
+                </>
+            ) : (
+                <>
+                    <Lock className="mr-2" />
+                    Verify & Pay €116.00
+                </>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

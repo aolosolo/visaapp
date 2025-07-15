@@ -107,7 +107,7 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
     }
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = form.handleSubmit((values) => {
     console.log({ ...visaDetails, ...values });
     toast({
       title: "Application Submitted Successfully!",
@@ -116,7 +116,7 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
     });
     form.reset();
     setCurrentStep(1);
-  }
+  });
 
   const progress = (currentStep / steps.length) * 100;
 
@@ -130,29 +130,29 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
         <Progress value={progress} className="mt-4" />
       </CardHeader>
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-8 min-h-[350px]">
+        <form onSubmit={(e) => e.preventDefault()}>
+          <CardContent className="space-y-8 min-h-[420px]">
             {currentStep === 1 && <ApplicantInfoStep />}
             {currentStep === 2 && <PassportInfoStep />}
             {currentStep === 3 && <EmploymentEducationStep />}
             {currentStep === 4 && <ContactInfoStep />}
-            {currentStep === 5 && <PaymentStep />}
+            {currentStep === 5 && <PaymentStep onBack={handleBack} onSubmit={onSubmit} />}
           </CardContent>
-          <CardFooter className="flex justify-between">
-            {currentStep > 1 ? (
-              <Button type="button" variant="outline" onClick={handleBack}>
-                <ArrowLeft className="mr-2" />
-                Back
-              </Button>
-            ) : <div />}
+          {currentStep < 5 && (
+            <CardFooter className="flex justify-between">
+              {currentStep > 1 ? (
+                <Button type="button" variant="outline" onClick={handleBack}>
+                  <ArrowLeft className="mr-2" />
+                  Back
+                </Button>
+              ) : <div />}
 
-            {currentStep < steps.length && (
               <Button type="button" onClick={handleNext} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 Next
                 <ArrowRight className="ml-2" />
               </Button>
-            )}
-          </CardFooter>
+            </CardFooter>
+          )}
         </form>
       </FormProvider>
     </Card>
