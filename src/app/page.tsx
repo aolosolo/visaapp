@@ -46,22 +46,19 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
       <main className="w-full max-w-4xl">
         <header className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <div className="inline-flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="inline-flex items-center justify-center gap-4">
               <Image 
                 src="https://www.driftwoodjournals.com/s/img/wp-content/uploads/2020/05/ETIAS-Visa-Waiver.jpg"
                 alt="VisaApply Logo"
-                width={50}
-                height={50}
+                width={80}
+                height={80}
                 className="rounded-full"
               />
               <h1 className="text-4xl md:text-5xl font-bold text-primary font-headline">
                 VisaApply
               </h1>
             </div>
-             <Button asChild variant="destructive">
-                <Link href="/checkout">Test Pay €1</Link>
-             </Button>
           </div>
           <p className="text-muted-foreground text-lg">
             Your streamlined visa application process starts here.
