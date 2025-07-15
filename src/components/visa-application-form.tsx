@@ -16,6 +16,7 @@ import { EmploymentEducationStep } from "@/components/form-steps/employment-educ
 import { ContactInfoStep } from "@/components/form-steps/contact-info-step";
 import { PaymentStep } from "@/components/form-steps/payment-step";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import type { VisaDetails } from "@/components/visa-pre-application";
 
 const applicantInfoSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters."),
@@ -59,7 +60,11 @@ const steps = [
   { id: 5, title: "Pay Visa Fee" },
 ];
 
-export function VisaApplicationForm() {
+interface VisaApplicationFormProps {
+  visaDetails: VisaDetails;
+}
+
+export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const { toast } = useToast();
 
@@ -68,6 +73,7 @@ export function VisaApplicationForm() {
     mode: "onChange",
     defaultValues: {
       fullName: "",
+      nationality: visaDetails.citizenship,
       passportNumber: "",
       email: "",
       phone: "",
@@ -102,7 +108,7 @@ export function VisaApplicationForm() {
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    console.log({ ...visaDetails, ...values });
     toast({
       title: "Application Submitted Successfully!",
       description: "We have received your application and will be in touch shortly.",

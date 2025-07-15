@@ -1,13 +1,22 @@
+
+"use client";
+
+import { useState } from 'react';
 import { PlaneTakeoff } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VisaApplicationForm } from '@/components/visa-application-form';
-import { ServiceSelection } from '@/components/service-selection';
-import { Card } from '@/components/ui/card';
+import { VisaPreApplication } from '@/components/visa-pre-application';
+import { VisaDetails } from '@/components/visa-pre-application';
 
 export default function Home() {
+  const [preApplicationData, setPreApplicationData] = useState<VisaDetails | null>(null);
+
+  const handlePreApplicationContinue = (data: VisaDetails) => {
+    setPreApplicationData(data);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
-      <main className="w-full max-w-7xl">
+      <main className="w-full max-w-4xl">
         <header className="mb-8 text-center">
           <div className="inline-flex items-center justify-center gap-3 mb-2">
             <PlaneTakeoff className="h-10 w-10 text-primary" />
@@ -20,21 +29,12 @@ export default function Home() {
           </p>
         </header>
 
-        <Tabs defaultValue="packages" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-auto">
-            <TabsTrigger value="application" className="text-base py-2">Application Form</TabsTrigger>
-            <TabsTrigger value="packages" className="text-base py-2">Service Packages</TabsTrigger>
-          </TabsList>
-          <TabsContent value="application" className="mt-6">
-            <VisaApplicationForm />
-          </TabsContent>
-          <TabsContent value="packages" className="mt-6">
-            <ServiceSelection />
-             <p className="text-center text-xs text-muted-foreground mt-4">
-              *Purchasing this service does not guarantee you a visa approval, only that we will try to find the best solution for your case.
-            </p>
-          </TabsContent>
-        </Tabs>
+        {!preApplicationData ? (
+          <VisaPreApplication onContinue={handlePreApplicationContinue} />
+        ) : (
+          <VisaApplicationForm visaDetails={preApplicationData} />
+        )}
+
       </main>
       <footer className="text-center p-4 text-muted-foreground mt-8 text-sm">
         © {new Date().getFullYear()} VisaApply. All Rights Reserved.
