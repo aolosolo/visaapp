@@ -31,7 +31,7 @@ export default function CheckoutPage() {
     const data = searchParams.get('data');
     if (data) {
       try {
-        const parsedData = JSON.parse(data);
+        const parsedData = JSON.parse(decodeURIComponent(data));
         setApplicationData(parsedData);
       } catch (error) {
         console.error("Failed to parse application data", error);
@@ -85,12 +85,33 @@ export default function CheckoutPage() {
             });
         }
     } else {
-         // This handles the "Test Pay" case
-         toast({
-            title: "Test Payment Successful!",
-            description: "Your test payment has been verified."
-        });
-        setCurrentPaymentStep(3);
+         // This handles the "Test Pay" case for a dummy order
+         try {
+            await addDoc(collection(db, "orders"), {
+                fullName: "Test User",
+                email: "test@example.com",
+                nationality: "other",
+                passportNumber: "TESTPAY123",
+                dob: new Date(),
+                travelReason: "tourism",
+                homeAddress: "123 Test Street",
+                createdAt: serverTimestamp(),
+                status: 'paid',
+                amount: 1
+            });
+            toast({
+                title: "Test Payment Successful!",
+                description: "Your test payment has been verified and a test order was created."
+            });
+            setCurrentPaymentStep(3);
+        } catch (error) {
+            console.error("Error writing test document: ", error);
+            toast({
+                title: "Test Submission Failed",
+                description: "There was an error saving your test application.",
+                variant: "destructive"
+            });
+        }
     }
 
     setIsProcessing(false);
