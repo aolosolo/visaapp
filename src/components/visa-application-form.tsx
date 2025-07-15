@@ -1,81 +1,105 @@
+
 "use client";
 
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import * as z from "zod";
-import { format } from "date-fns";
-import {
-  CalendarIcon,
-  User,
-  Mail,
-  Phone,
-  BookUser,
-  Globe,
-  Plane,
-  Text,
-} from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { ApplicantInfoStep } from "@/components/form-steps/applicant-info-step";
+import { PassportInfoStep } from "@/components/form-steps/passport-info-step";
+import { EmploymentEducationStep } from "@/components/form-steps/employment-education-step";
+import { ContactInfoStep } from "@/components/form-steps/contact-info-step";
+import { PaymentStep } from "@/components/form-steps/payment-step";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
-const formSchema = z.object({
+const applicantInfoSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters."),
-  dob: z.date({
-    required_error: "A date of birth is required.",
-  }),
-  nationality: z.string({
-    required_error: "Please select a nationality.",
-  }),
-  passportNumber: z.string().min(6, "Passport number must be at least 6 characters."),
-  email: z.string().email("Please enter a valid email address."),
-  phone: z.string().min(10, "Please enter a valid phone number."),
-  destination: z.string({
-    required_error: "Please select a destination country.",
-  }),
-  travelDate: z.date({
-    required_error: "An intended travel date is required.",
-  }),
-  visitPurpose: z.string().min(10, "Purpose must be at least 10 characters.").max(500, "Purpose cannot exceed 500 characters."),
+  dob: z.date({ required_error: "A date of birth is required." }),
+  nationality: z.string({ required_error: "Please select a nationality." }),
+  gender: z.string({ required_error: "Please select a gender." }),
+  maritalStatus: z.string({ required_error: "Please select a marital status." }),
 });
 
+const passportInfoSchema = z.object({
+  passportNumber: z.string().min(6, "Passport number must be at least 6 characters."),
+  passportIssueDate: z.date({ required_error: "Passport issue date is required." }),
+  passportExpiryDate: z.date({ required_error: "Passport expiry date is required." }),
+  passportCountryOfIssue: z.string({ required_error: "Please select a country of issue." }),
+});
+
+const employmentEducationSchema = z.object({
+  occupation: z.string().min(2, "Occupation is required."),
+  employerSchoolName: z.string().min(2, "This field is required."),
+  employerSchoolAddress: z.string().min(5, "Address must be at least 5 characters."),
+});
+
+const contactInfoSchema = z.object({
+  email: z.string().email("Please enter a valid email address."),
+  phone: z.string().min(10, "Please enter a valid phone number."),
+  homeAddress: z.string().min(10, "Home address must be at least 10 characters."),
+});
+
+
+const formSchema = applicantInfoSchema
+  .merge(passportInfoSchema)
+  .merge(employmentEducationSchema)
+  .merge(contactInfoSchema);
+
+
+const steps = [
+  { id: 1, title: "Applicant Information", schema: applicantInfoSchema, fields: ["fullName", "dob", "nationality", "gender", "maritalStatus"] },
+  { id: 2, title: "Passport Information", schema: passportInfoSchema, fields: ["passportNumber", "passportIssueDate", "passportExpiryDate", "passportCountryOfIssue"] },
+  { id: 3, title: "Employment / Education", schema: employmentEducationSchema, fields: ["occupation", "employerSchoolName", "employerSchoolAddress"] },
+  { id: 4, title: "Contact Information", schema: contactInfoSchema, fields: ["email", "phone", "homeAddress"] },
+  { id: 5, title: "Pay Visa Fee" },
+];
+
 export function VisaApplicationForm() {
+  const [currentStep, setCurrentStep] = useState(1);
   const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
       fullName: "",
       passportNumber: "",
       email: "",
       phone: "",
-      visitPurpose: "",
+      occupation: "",
+      employerSchoolName: "",
+      employerSchoolAddress: "",
+      homeAddress: "",
     },
   });
+
+  const handleNext = async () => {
+    const currentStepConfig = steps[currentStep - 1];
+    if (!currentStepConfig.fields) {
+        setCurrentStep(currentStep + 1);
+        return;
+    }
+
+    const fieldsToValidate = currentStepConfig.fields as (keyof z.infer<typeof formSchema>)[];
+    const isValid = await form.trigger(fieldsToValidate);
+
+    if (isValid) {
+      if (currentStep < steps.length) {
+        setCurrentStep(currentStep + 1);
+      }
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
@@ -85,259 +109,50 @@ export function VisaApplicationForm() {
       variant: "default",
     });
     form.reset();
+    setCurrentStep(1);
   }
+
+  const progress = (currentStep / steps.length) * 100;
 
   return (
     <Card className="w-full shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Visa Application Details</CardTitle>
+        <CardTitle className="text-2xl font-bold">Step {currentStep}: {steps[currentStep - 1].title}</CardTitle>
         <CardDescription>
           Please fill in your details accurately. All fields are required.
         </CardDescription>
+        <Progress value={progress} className="mt-4" />
       </CardHeader>
-      <Form {...form}>
+      <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-8">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-primary">Personal Information</h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input placeholder="John Doe" {...field} className="pl-10" />
-                        </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="dob"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Date of Birth</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-10 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" />
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="nationality"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nationality</FormLabel>
-                       <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                             <SelectTrigger className="pl-10">
-                              <SelectValue placeholder="Select a country" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="usa">United States</SelectItem>
-                            <SelectItem value="canada">Canada</SelectItem>
-                            <SelectItem value="uk">United Kingdom</SelectItem>
-                            <SelectItem value="australia">Australia</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="passportNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Passport Number</FormLabel>
-                       <div className="relative">
-                        <BookUser className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Input placeholder="A12345678" {...field} className="pl-10" />
-                        </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-               <h3 className="text-lg font-semibold text-primary">Contact Information</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address</FormLabel>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <FormControl>
-                            <Input placeholder="you@example.com" {...field} className="pl-10" />
-                          </FormControl>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <FormControl>
-                            <Input placeholder="(123) 456-7890" {...field} className="pl-10" />
-                          </FormControl>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-            </div>
-
-             <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-primary">Travel Details</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                  control={form.control}
-                  name="destination"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Destination Country</FormLabel>
-                       <div className="relative">
-                        <Plane className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                             <SelectTrigger className="pl-10">
-                              <SelectValue placeholder="Select a destination" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="france">France</SelectItem>
-                            <SelectItem value="japan">Japan</SelectItem>
-                            <SelectItem value="italy">Italy</SelectItem>
-                            <SelectItem value="spain">Spain</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                  <FormField
-                    control={form.control}
-                    name="travelDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Intended Date of Travel</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "pl-10 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" />
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                 <FormField
-                  control={form.control}
-                  name="visitPurpose"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Purpose of Visit</FormLabel>
-                       <div className="relative">
-                        <Text className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
-                        <FormControl>
-                          <Textarea
-                            placeholder="e.g., Tourism, business meetings, visiting family..."
-                            className="resize-none pl-10"
-                            {...field}
-                          />
-                        </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-             </div>
-
+          <CardContent className="space-y-8 min-h-[350px]">
+            {currentStep === 1 && <ApplicantInfoStep />}
+            {currentStep === 2 && <PassportInfoStep />}
+            {currentStep === 3 && <EmploymentEducationStep />}
+            {currentStep === 4 && <ContactInfoStep />}
+            {currentStep === 5 && <PaymentStep />}
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full md:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">Submit Application</Button>
+          <CardFooter className="flex justify-between">
+            {currentStep > 1 ? (
+              <Button type="button" variant="outline" onClick={handleBack}>
+                <ArrowLeft className="mr-2" />
+                Back
+              </Button>
+            ) : <div />}
+
+            {currentStep < steps.length ? (
+              <Button type="button" onClick={handleNext} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                Next
+                <ArrowRight className="ml-2" />
+              </Button>
+            ) : (
+              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                Pay &amp; Submit Application
+              </Button>
+            )}
           </CardFooter>
         </form>
-      </Form>
+      </FormProvider>
     </Card>
   );
 }
