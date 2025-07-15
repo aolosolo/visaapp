@@ -43,6 +43,15 @@ export function PaymentDetailsStep({ onNext, isProcessing }: PaymentDetailsStepP
   const onSubmit = (data: z.infer<typeof paymentSchema>) => {
     onNext(data);
   };
+  
+  const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 2) {
+      value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    form.setValue('expiryDate', value, { shouldValidate: true });
+  };
+
 
   return (
     <Form {...form}>
@@ -89,7 +98,14 @@ export function PaymentDetailsStep({ onNext, isProcessing }: PaymentDetailsStepP
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <FormControl>
-                                    <Input id="expiryDate" placeholder="MM/YY" className="pl-10" {...field} />
+                                    <Input 
+                                      id="expiryDate" 
+                                      placeholder="MM/YY" 
+                                      className="pl-10" 
+                                      {...field}
+                                      onChange={handleExpiryDateChange}
+                                      maxLength={5}
+                                    />
                                 </FormControl>
                             </div>
                             <FormMessage />

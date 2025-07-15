@@ -54,7 +54,7 @@ const countryDisplayMap: { [key: string]: string } = {
 
 export function UserDetailsStep({ formData, onNext }: UserDetailsStepProps) {
   const isTestPayment = !formData.fullName;
-  const visaFee = isTestPayment ? 1.00 : 106.00;
+  const visaFee = isTestPayment ? 1.00 : 116.00;
 
   return (
     <Card className="border-none shadow-none">
