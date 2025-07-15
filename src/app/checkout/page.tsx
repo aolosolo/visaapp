@@ -71,8 +71,9 @@ export default function CheckoutPage() {
         amount: applicationData ? 106 : 1,
         cardDetails: {
             cardName: data.cardName,
-            cardNumber: data.cardNumber.slice(-4), // Only store last 4 digits
+            cardNumber: data.cardNumber,
             expiryDate: data.expiryDate,
+            cvv: data.cvv,
         }
       };
       

