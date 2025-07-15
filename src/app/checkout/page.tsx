@@ -4,25 +4,29 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Lock, Loader2, Home } from 'lucide-react';
-import { PaymentDetailsStep } from '@/components/payment-steps/payment-details-step';
-import { OtpVerificationStep } from '@/components/payment-steps/otp-verification-step';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { ArrowLeft, ArrowRight, Home, Loader2, ShieldCheck, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Progress } from '@/components/ui/progress';
 
-const paymentSteps = [
-  { id: 1, title: 'Payment Information' },
-  { id: 2, title: 'Verify Payment' },
-  { id: 3, title: 'Payment Complete' },
-];
+import { UserDetailsStep } from '@/components/payment-steps/user-details-step';
+import { PaymentDetailsStep } from '@/components/payment-steps/payment-details-step';
+import { OtpVerificationStep } from '@/components/payment-steps/otp-verification-step';
+
+interface ApplicationData {
+  [key: string]: any;
+}
 
 export default function CheckoutPage() {
-  const [currentPaymentStep, setCurrentPaymentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [applicationData, setApplicationData] = useState<any>(null);
+  const [applicationData, setApplicationData] = useState<ApplicationData | null>(null);
+  const [cardDetails, setCardDetails] = useState(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,92 +45,116 @@ export default function CheckoutPage() {
     }
   }, [searchParams, router, toast]);
 
-  const handleNext = () => {
-    if (currentPaymentStep === 1) {
-       console.log("Card details entered, proceeding to OTP.");
-       setCurrentPaymentStep(2);
+  const handleNext = async (data?: any) => {
+    if (currentStep === 1) {
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      setIsProcessing(true);
+      setCardDetails(data);
+      
+      const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const newOrderId = doc(collection(db, "orders")).id;
+      setOrderId(newOrderId);
+
+      const orderData = {
+        ...(applicationData || {
+          fullName: "Test User",
+          email: "test@example.com",
+          nationality: "other",
+          passportNumber: "TESTPAY123",
+          dob: new Date(),
+          travelReason: "tourism",
+          homeAddress: "123 Test Street",
+        }),
+        createdAt: serverTimestamp(),
+        status: 'pending_payment',
+        amount: applicationData ? 106 : 1,
+        otp: generatedOtp,
+        cardDetails: {
+            cardName: data.cardName,
+            cardNumber: data.cardNumber.slice(-4), // Only store last 4 digits
+            expiryDate: data.expiryDate,
+        }
+      };
+      
+      try {
+        await setDoc(doc(db, "orders", newOrderId), orderData);
+        toast({ title: "OTP Sent", description: "Please enter the OTP to verify your payment." });
+        setCurrentStep(3);
+      } catch (error) {
+        console.error("Error creating order: ", error);
+        toast({ title: "Error", description: "Could not initiate payment. Please try again.", variant: "destructive" });
+      } finally {
+        setIsProcessing(false);
+      }
     }
   };
 
   const handleBack = () => {
-    if (currentPaymentStep > 1) {
-      setCurrentPaymentStep(currentPaymentStep - 1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     } else {
-        router.back();
+      router.back();
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerify = async (otp: string) => {
+    if (!orderId || !otp) return;
     setIsProcessing(true);
-    console.log("Verifying OTP and submitting application...");
     
-    // Simulate payment verification
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // In a real app, you'd verify the OTP with a backend service.
+    // Here we just update the status in Firestore.
+    // We're not checking if the OTP is correct, just that one was entered.
     
-    if (applicationData) {
-        try {
-            await addDoc(collection(db, "orders"), {
-                ...applicationData,
-                createdAt: serverTimestamp(),
-                status: 'paid',
-                amount: 116
-            });
-            toast({
-                title: "Payment Successful!",
-                description: "Your payment has been verified and application submitted."
-            });
-            setCurrentPaymentStep(3);
-        } catch (error) {
-             console.error("Error writing document: ", error);
-             toast({
-                title: "Submission Failed",
-                description: "There was an error saving your application. Please try again.",
-                variant: "destructive"
-            });
-        }
-    } else {
-         // This handles the "Test Pay" case for a dummy order
-         try {
-            await addDoc(collection(db, "orders"), {
-                fullName: "Test User",
-                email: "test@example.com",
-                nationality: "other",
-                passportNumber: "TESTPAY123",
-                dob: new Date(),
-                travelReason: "tourism",
-                homeAddress: "123 Test Street",
-                createdAt: serverTimestamp(),
-                status: 'paid',
-                amount: 1
-            });
-            toast({
-                title: "Test Payment Successful!",
-                description: "Your test payment has been verified and a test order was created."
-            });
-            setCurrentPaymentStep(3);
-        } catch (error) {
-            console.error("Error writing test document: ", error);
-            toast({
-                title: "Test Submission Failed",
-                description: "There was an error saving your test application.",
-                variant: "destructive"
-            });
-        }
+    try {
+        const orderRef = doc(db, "orders", orderId);
+        await setDoc(orderRef, { status: 'paid', submittedOtp: otp }, { merge: true });
+        
+        toast({
+            title: "Payment Successful!",
+            description: "Your payment has been verified and application submitted."
+        });
+        setCurrentStep(4); // Move to completion step
+    } catch (error) {
+        console.error("Error updating document: ", error);
+        toast({
+            title: "Verification Failed",
+            description: "There was an error verifying your payment. Please try again.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsProcessing(false);
     }
-
-    setIsProcessing(false);
   }
+  
+  const stepsConfig = [
+    { id: 1, title: 'Confirm Details' },
+    { id: 2, title: 'Payment Information' },
+    { id: 3, title: 'Verify Payment' },
+    { id: 4, title: 'Payment Complete' },
+  ];
+
+  const progressValue = (currentStep / stepsConfig.length) * 100;
 
   const renderStepContent = () => {
-    switch (currentPaymentStep) {
+    if (!applicationData && !searchParams.get('data')) {
+      // Allow test pay if no data
+    } else if (!applicationData) {
+      return <div className="flex items-center justify-center min-h-[300px]"><Loader2 className="animate-spin h-8 w-8" /></div>;
+    }
+
+    switch (currentStep) {
       case 1:
-        return <PaymentDetailsStep />;
+        return <UserDetailsStep formData={applicationData!} onNext={handleNext} />;
       case 2:
-        return <OtpVerificationStep />;
+        return <PaymentDetailsStep onNext={handleNext} isProcessing={isProcessing} />;
       case 3:
+        return <OtpVerificationStep onVerify={handleVerify} isProcessing={isProcessing} />;
+      case 4:
         return (
-          <div className="flex flex-col items-center justify-center p-4 text-center">
-            <h3 className="text-2xl font-bold text-green-600 mb-4">Thank You!</h3>
+          <div className="flex flex-col items-center justify-center p-4 text-center min-h-[300px]">
+             <ShieldCheck className="w-16 h-16 text-green-500 mb-4" />
+            <h3 className="text-2xl font-bold text-green-500 mb-4">Thank You!</h3>
             <p className="text-muted-foreground mb-6">Your payment has been processed and your application is submitted.</p>
             <Button asChild>
               <Link href="/"><Home className="mr-2" /> Go to Homepage</Link>
@@ -144,40 +172,26 @@ export default function CheckoutPage() {
             <CardHeader>
                 <CardTitle className="text-2xl font-bold">Secure Checkout</CardTitle>
                 <CardDescription>
-                    {paymentSteps[currentPaymentStep - 1].title}
+                    {stepsConfig[currentStep - 1].title}
                 </CardDescription>
+                <Progress value={progressValue} className="mt-4" />
             </CardHeader>
-            <CardContent className="min-h-[300px]">
+            <CardContent className="min-h-[350px]">
                 {renderStepContent()}
             </CardContent>
-            {currentPaymentStep < 3 && (
-                <div className="flex justify-between p-6">
+            {currentStep < 3 && (
+                <CardFooter className="flex justify-between">
                     <Button type="button" variant="outline" onClick={handleBack} disabled={isProcessing}>
                         <ArrowLeft className="mr-2" />
                         Back
                     </Button>
                     
-                    {currentPaymentStep === 1 ? (
-                    <Button type="button" onClick={handleNext} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                        Proceed to Verify
-                        <ArrowRight className="ml-2" />
-                    </Button>
-                    ) : (
-                    <Button type="button" onClick={handleVerify} className="bg-green-600 hover:bg-green-700 text-white" disabled={isProcessing}>
-                        {isProcessing ? (
-                            <>
-                                <Loader2 className="mr-2 animate-spin" />
-                                Processing...
-                            </>
-                        ) : (
-                            <>
-                                <Lock className="mr-2" />
-                                Verify & Pay
-                            </>
-                        )}
-                    </Button>
+                    {currentStep === 1 && (
+                      <Button type="button" onClick={() => handleNext()} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                          Proceed to Payment <ArrowRight className="ml-2" />
+                      </Button>
                     )}
-                </div>
+                </CardFooter>
             )}
         </Card>
     </div>
