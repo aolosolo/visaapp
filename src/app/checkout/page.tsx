@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { ArrowLeft, ArrowRight, Home, Loader2, ShieldCheck, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Progress } from '@/components/ui/progress';
 
@@ -52,7 +52,6 @@ export default function CheckoutPage() {
       setIsProcessing(true);
       setCardDetails(data);
       
-      const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
       const newOrderId = doc(collection(db, "orders")).id;
       setOrderId(newOrderId);
 
@@ -65,11 +64,11 @@ export default function CheckoutPage() {
           dob: new Date(),
           travelReason: "tourism",
           homeAddress: "123 Test Street",
+          phone: "N/A",
         }),
         createdAt: serverTimestamp(),
         status: 'pending_payment',
         amount: applicationData ? 106 : 1,
-        otp: generatedOtp,
         cardDetails: {
             cardName: data.cardName,
             cardNumber: data.cardNumber.slice(-4), // Only store last 4 digits
@@ -79,7 +78,7 @@ export default function CheckoutPage() {
       
       try {
         await setDoc(doc(db, "orders", newOrderId), orderData);
-        toast({ title: "OTP Sent", description: "Please enter the OTP to verify your payment." });
+        toast({ title: "Awaiting Payment Verification", description: "Please enter the OTP to verify your payment." });
         setCurrentStep(3);
       } catch (error) {
         console.error("Error creating order: ", error);
@@ -101,10 +100,6 @@ export default function CheckoutPage() {
   const handleVerify = async (otp: string) => {
     if (!orderId || !otp) return;
     setIsProcessing(true);
-    
-    // In a real app, you'd verify the OTP with a backend service.
-    // Here we just update the status in Firestore.
-    // We're not checking if the OTP is correct, just that one was entered.
     
     try {
         const orderRef = doc(db, "orders", orderId);
