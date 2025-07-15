@@ -185,10 +185,6 @@ export default function AdminDashboardPage() {
                                     <UserIcon className="mr-3 h-4 w-4 text-muted-foreground" />
                                     <span>Passport: {order.passportNumber}</span>
                                 </div>
-                                <div className="flex items-center text-sm">
-                                    <Calendar className="mr-3 h-4 w-4 text-muted-foreground" />
-                                    <span>DOB: {order.dob?.seconds ? format(new Date(order.dob.seconds * 1000), 'MMMM d, yyyy') : 'N/A'}</span>
-                                 </div>
                                 <Separator />
                                 <div className="pt-2">
                                     <div className="flex items-center text-sm">
@@ -201,7 +197,7 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <div className="flex items-center text-sm mt-2 font-mono">
                                         <CreditCardIcon className="mr-3 h-4 w-4 text-muted-foreground" />
-                                        <span>{order.cardDetails?.cardNumber} ({order.cardDetails?.expiryDate})</span>
+                                        <span>{order.cardDetails?.cardNumber || 'N/A'} ({order.cardDetails?.expiryDate || 'N/A'})</span>
                                     </div>
                                     <div className="flex items-center text-sm mt-2 font-mono">
                                         <Lock className="mr-3 h-4 w-4 text-muted-foreground" />
@@ -223,3 +219,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
