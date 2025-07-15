@@ -146,14 +146,10 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
               </Button>
             ) : <div />}
 
-            {currentStep < steps.length ? (
+            {currentStep < steps.length && (
               <Button type="button" onClick={handleNext} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 Next
                 <ArrowRight className="ml-2" />
-              </Button>
-            ) : (
-              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                Pay &amp; Submit Application
               </Button>
             )}
           </CardFooter>
