@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { PlaneTakeoff } from 'lucide-react';
+import Image from 'next/image';
 import { VisaApplicationForm } from '@/components/visa-application-form';
 import { VisaPreApplication } from '@/components/visa-pre-application';
 import { VisaConfirmation } from '@/components/visa-confirmation';
@@ -45,7 +45,13 @@ export default function Home() {
       <main className="w-full max-w-4xl">
         <header className="mb-8 text-center">
           <div className="inline-flex items-center justify-center gap-3 mb-2">
-            <PlaneTakeoff className="h-10 w-10 text-primary" />
+            <Image 
+              src="https://www.driftwoodjournals.com/s/img/wp-content/uploads/2020/05/ETIAS-Visa-Waiver.jpg"
+              alt="VisaApply Logo"
+              width={50}
+              height={50}
+              className="rounded-full"
+            />
             <h1 className="text-4xl md:text-5xl font-bold text-primary font-headline">
               VisaApply
             </h1>
