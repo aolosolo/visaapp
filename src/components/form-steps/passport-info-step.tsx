@@ -3,14 +3,10 @@
 
 import { useFormContext } from "react-hook-form";
 import { format } from "date-fns";
-import { CalendarIcon, BookUser, Globe } from "lucide-react";
+import { BookUser, Globe } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function PassportInfoStep() {
@@ -66,33 +62,18 @@ export function PassportInfoStep() {
           control={control}
           name="passportIssueDate"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Passport Issue Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "pl-10 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" />
-                      {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) => date > new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <Input 
+                  type="date"
+                  {...field}
+                  value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                  onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                  className="pr-3"
+                  max={format(new Date(), 'yyyy-MM-dd')}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -101,33 +82,18 @@ export function PassportInfoStep() {
           control={control}
           name="passportExpiryDate"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Passport Expiry Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "pl-10 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" />
-                      {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+                <FormControl>
+                   <Input 
+                      type="date"
+                      {...field}
+                      value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                      className="pr-3"
+                      min={format(new Date(), 'yyyy-MM-dd')}
+                   />
+                </FormControl>
               <FormMessage />
             </FormItem>
           )}
