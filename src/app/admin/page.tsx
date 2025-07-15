@@ -64,6 +64,7 @@ export default function AdminDashboardPage() {
   const isFirstLoadRef = useRef(true);
 
   const playAlarmSound = useCallback(() => {
+    if (typeof window === 'undefined') return;
     if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext)();
     }
