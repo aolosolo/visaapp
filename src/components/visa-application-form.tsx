@@ -100,14 +100,15 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
       } else {
         // Final step, navigate to checkout
         const values = form.getValues();
-        console.log({ ...visaDetails, ...values });
+        const applicationData = { ...visaDetails, ...values };
+        
         toast({
             title: "Application Ready for Payment",
             description: "Please proceed to pay the visa fee.",
         });
-        // Here you might want to save the form data to a state management solution
-        // or pass it to the checkout page via query params (for non-sensitive data).
-        router.push('/checkout');
+        
+        const dataString = JSON.stringify(applicationData);
+        router.push(`/checkout?data=${encodeURIComponent(dataString)}`);
       }
     }
   };

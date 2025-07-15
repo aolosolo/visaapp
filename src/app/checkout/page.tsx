@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,9 @@ import { ArrowLeft, ArrowRight, Lock, Loader2, Home } from 'lucide-react';
 import { PaymentDetailsStep } from '@/components/payment-steps/payment-details-step';
 import { OtpVerificationStep } from '@/components/payment-steps/otp-verification-step';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const paymentSteps = [
   { id: 1, title: 'Payment Information' },
@@ -20,8 +22,24 @@ const paymentSteps = [
 export default function CheckoutPage() {
   const [currentPaymentStep, setCurrentPaymentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [applicationData, setApplicationData] = useState<any>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const data = searchParams.get('data');
+    if (data) {
+      try {
+        const parsedData = JSON.parse(data);
+        setApplicationData(parsedData);
+      } catch (error) {
+        console.error("Failed to parse application data", error);
+        toast({ title: "Error", description: "Could not load application data.", variant: "destructive" });
+        router.push('/');
+      }
+    }
+  }, [searchParams, router, toast]);
 
   const handleNext = () => {
     if (currentPaymentStep === 1) {
@@ -38,17 +56,44 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     setIsProcessing(true);
     console.log("Verifying OTP and submitting application...");
-    setTimeout(() => {
-        setIsProcessing(false);
-        toast({
-            title: "Payment Successful!",
-            description: "Your payment has been verified."
+    
+    // Simulate payment verification
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    if (applicationData) {
+        try {
+            await addDoc(collection(db, "orders"), {
+                ...applicationData,
+                createdAt: serverTimestamp(),
+                status: 'paid',
+                amount: 116
+            });
+            toast({
+                title: "Payment Successful!",
+                description: "Your payment has been verified and application submitted."
+            });
+            setCurrentPaymentStep(3);
+        } catch (error) {
+             console.error("Error writing document: ", error);
+             toast({
+                title: "Submission Failed",
+                description: "There was an error saving your application. Please try again.",
+                variant: "destructive"
+            });
+        }
+    } else {
+         // This handles the "Test Pay" case
+         toast({
+            title: "Test Payment Successful!",
+            description: "Your test payment has been verified."
         });
         setCurrentPaymentStep(3);
-    }, 2000);
+    }
+
+    setIsProcessing(false);
   }
 
   const renderStepContent = () => {
