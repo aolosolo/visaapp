@@ -3,19 +3,18 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { VisaApplicationForm } from '@/components/visa-application-form';
 import { VisaPreApplication } from '@/components/visa-pre-application';
 import { VisaConfirmation } from '@/components/visa-confirmation';
 import type { VisaDetails } from '@/components/visa-pre-application';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
 
 type AppStep = 'pre-application' | 'confirmation' | 'application';
 
 export default function Home() {
   const [appStep, setAppStep] = useState<AppStep>('pre-application');
   const [visaDetails, setVisaDetails] = useState<VisaDetails | null>(null);
-  const { toast } = useToast();
 
   const handlePreApplicationContinue = (data: VisaDetails) => {
     setVisaDetails(data);
@@ -28,15 +27,6 @@ export default function Home() {
   
   const handleEditDetails = () => {
     setAppStep('pre-application');
-  }
-
-  const handleTestPay = () => {
-    toast({
-      title: "Test Payment",
-      description: "Processing test payment of €1.00",
-    });
-    // In a real application, you would integrate a payment gateway here.
-    console.log("Test payment initiated.");
   }
 
   const renderStep = () => {
@@ -69,7 +59,9 @@ export default function Home() {
                 VisaApply
               </h1>
             </div>
-             <Button onClick={handleTestPay} variant="destructive">Test Pay €1</Button>
+             <Button asChild variant="destructive">
+                <Link href="/checkout">Test Pay €1</Link>
+             </Button>
           </div>
           <p className="text-muted-foreground text-lg">
             Your streamlined visa application process starts here.

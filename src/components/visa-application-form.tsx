@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, FormProvider } from "react-hook-form";
 import * as z from "zod";
+import { useRouter } from 'next/navigation';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -14,7 +15,6 @@ import { ApplicantInfoStep } from "@/components/form-steps/applicant-info-step";
 import { PassportInfoStep } from "@/components/form-steps/passport-info-step";
 import { EmploymentEducationStep } from "@/components/form-steps/employment-education-step";
 import { ContactInfoStep } from "@/components/form-steps/contact-info-step";
-import { PaymentStep } from "@/components/form-steps/payment-step";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { VisaDetails } from "@/components/visa-pre-application";
 
@@ -57,7 +57,6 @@ const steps = [
   { id: 2, title: "Passport Information", schema: passportInfoSchema, fields: ["passportNumber", "passportIssueDate", "passportExpiryDate", "passportCountryOfIssue"] },
   { id: 3, title: "Employment / Education", schema: employmentEducationSchema, fields: ["occupation", "employerSchoolName", "employerSchoolAddress"] },
   { id: 4, title: "Contact Information", schema: contactInfoSchema, fields: ["email", "phone", "homeAddress"] },
-  { id: 5, title: "Pay Visa Fee" },
 ];
 
 interface VisaApplicationFormProps {
@@ -66,6 +65,7 @@ interface VisaApplicationFormProps {
 
 export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const router = useRouter();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -97,6 +97,17 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
     if (isValid) {
       if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
+      } else {
+        // Final step, navigate to checkout
+        const values = form.getValues();
+        console.log({ ...visaDetails, ...values });
+        toast({
+            title: "Application Ready for Payment",
+            description: "Please proceed to pay the visa fee.",
+        });
+        // Here you might want to save the form data to a state management solution
+        // or pass it to the checkout page via query params (for non-sensitive data).
+        router.push('/checkout');
       }
     }
   };
@@ -107,18 +118,7 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
     }
   };
 
-  const onSubmit = form.handleSubmit((values) => {
-    console.log({ ...visaDetails, ...values });
-    toast({
-      title: "Application Submitted Successfully!",
-      description: "We have received your application and will be in touch shortly.",
-      variant: "default",
-    });
-    form.reset();
-    setCurrentStep(1);
-  });
-
-  const progress = (currentStep / steps.length) * 100;
+  const progress = (currentStep / (steps.length + 1)) * 100;
 
   return (
     <Card className="w-full shadow-lg">
@@ -136,23 +136,20 @@ export function VisaApplicationForm({ visaDetails }: VisaApplicationFormProps) {
             {currentStep === 2 && <PassportInfoStep />}
             {currentStep === 3 && <EmploymentEducationStep />}
             {currentStep === 4 && <ContactInfoStep />}
-            {currentStep === 5 && <PaymentStep onBack={handleBack} onSubmit={onSubmit} />}
           </CardContent>
-          {currentStep < 5 && (
-            <CardFooter className="flex justify-between">
-              {currentStep > 1 ? (
-                <Button type="button" variant="outline" onClick={handleBack}>
-                  <ArrowLeft className="mr-2" />
-                  Back
-                </Button>
-              ) : <div />}
-
-              <Button type="button" onClick={handleNext} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                Next
-                <ArrowRight className="ml-2" />
+          <CardFooter className="flex justify-between">
+            {currentStep > 1 ? (
+              <Button type="button" variant="outline" onClick={handleBack}>
+                <ArrowLeft className="mr-2" />
+                Back
               </Button>
-            </CardFooter>
-          )}
+            ) : <div />}
+
+            <Button type="button" onClick={handleNext} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              {currentStep === steps.length ? "Proceed to Pay Visa Fee" : "Next"}
+              <ArrowRight className="ml-2" />
+            </Button>
+          </CardFooter>
         </form>
       </FormProvider>
     </Card>
