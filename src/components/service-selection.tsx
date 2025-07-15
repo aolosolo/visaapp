@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Star } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,51 +18,57 @@ import { useToast } from "@/hooks/use-toast";
 
 const services = [
   {
-    id: "standard",
-    name: "Standard",
-    price: "$199",
-    description: "For the essential traveler.",
+    id: "etias",
+    name: "Europe ETIAS",
+    price: "€106.00",
+    feeText: "Government fees ARE included",
     features: [
-      "Application review",
-      "Standard processing time",
-      "Email support",
+      "Your personal visa consultant",
+      "24/7 limitless support, anywhere",
+      "User-friendly digital tools that ensures high approval rate",
+      "Decades of experience",
+      "One-time courtesy reprocessing",
     ],
     isPopular: false,
   },
   {
-    id: "premium",
-    name: "Premium",
-    price: "$349",
-    description: "Our most popular choice.",
+    id: "service",
+    name: "Europe Visa Service",
+    price: "€175.00",
+    feeText: "Government fees NOT included",
     features: [
-      "Everything in Standard",
-      "Expedited processing",
-      "Document pre-check",
-      "Phone & email support",
+      "All the perks of a personal visa consultant",
+      "24/7 limitless support, anywhere in the world",
+      "User-friendly digital tools",
+      "Decades of experience",
+      "Application review, invitation letter, interview guide",
+      "Many more...",
     ],
     isPopular: true,
   },
   {
     id: "vip",
-    name: "VIP",
-    price: "$599",
-    description: "For a seamless experience.",
+    name: "Europe VISA VIP",
+    price: "€495.00",
+    feeText: "Government fees NOT included",
     features: [
-      "Everything in Premium",
-      "Dedicated case manager",
-      "Appointment scheduling",
-      "24/7 priority support",
+      "Private 30-minute consultation with a real ex-visa officer",
+      "Your personal visa advisor who knows how to stay ahead of potential obstacles and avoids any unnecessary delays",
+      "24/7 limitless support, anywhere in the world",
+      "User-friendly digital tools",
+      "Application review, invitation letter, interview guide",
+      "Many more...",
     ],
     isPopular: false,
   },
 ];
 
 export function ServiceSelection() {
-  const [selectedService, setSelectedService] = useState("premium");
+  const [selectedService, setSelectedService] = useState("service");
   const { toast } = useToast();
 
-  const handleContinue = () => {
-    const service = services.find(s => s.id === selectedService);
+  const handleContinue = (serviceId: string) => {
+    const service = services.find(s => s.id === serviceId);
     toast({
       title: "Package Selected!",
       description: `You have selected the ${service?.name} package.`,
@@ -70,57 +76,57 @@ export function ServiceSelection() {
   };
 
   return (
-    <Card className="w-full shadow-lg">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Select Your Service Package</CardTitle>
-        <CardDescription>
-          Choose the package that best suits your needs for a hassle-free process.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <RadioGroup
-          value={selectedService}
-          onValueChange={setSelectedService}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          {services.map((service) => (
-            <div key={service.id} className="relative">
-              <RadioGroupItem value={service.id} id={service.id} className="peer sr-only" />
-              <Label
-                htmlFor={service.id}
-                className="block cursor-pointer rounded-lg border bg-card text-card-foreground shadow-sm transition-all peer-data-[state=checked]:border-primary peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-primary/50"
-              >
-                <Card className="border-0 shadow-none">
-                  {service.isPopular && (
-                    <div className="absolute -top-3 right-4 flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-                      <Star className="h-4 w-4" /> Popular
-                    </div>
+    <RadioGroup
+      value={selectedService}
+      onValueChange={setSelectedService}
+      className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start"
+    >
+      {services.map((service) => (
+        <div key={service.id} className="relative h-full">
+          <RadioGroupItem value={service.id} id={service.id} className="peer sr-only" />
+          <Label
+            htmlFor={service.id}
+            className={cn(
+              "block cursor-pointer rounded-lg border bg-card text-card-foreground shadow-sm transition-all h-full",
+              "peer-data-[state=checked]:border-primary peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-primary/50"
+            )}
+          >
+            <Card className="border-0 shadow-none flex flex-col h-full">
+              {service.isPopular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-orange-500 px-4 py-1.5 text-xs font-semibold text-white">
+                  BEST VALUE
+                </div>
+              )}
+              <CardHeader className="text-center pt-8">
+                <CardTitle className="text-xl font-bold">{service.name}</CardTitle>
+                <p className="text-4xl font-bold text-primary pt-2">{service.price}</p>
+                <CardDescription>{service.feeText}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <Button 
+                  onClick={() => handleContinue(service.id)} 
+                  className={cn(
+                    "w-full mt-4 mb-6",
+                    service.isPopular ? "bg-accent hover:bg-accent/90 text-accent-foreground" : "bg-transparent border-primary text-primary hover:bg-primary/5 border"
                   )}
-                  <CardHeader>
-                    <CardTitle className="text-xl">{service.name}</CardTitle>
-                    <CardDescription className="text-2xl font-bold text-primary">{service.price}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3 text-sm text-muted-foreground">
-                      {service.features.map((feature, index) => (
-                        <li key={index} className="flex items-start">
-                          <Check className="mr-2 mt-1 h-4 w-4 shrink-0 text-accent" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </CardContent>
-      <CardFooter className="flex-col items-center gap-4">
-        <Button onClick={handleContinue} className="w-full md:w-1/2 bg-accent hover:bg-accent/90 text-accent-foreground">
-          Continue with Selected Package
-        </Button>
-      </CardFooter>
-    </Card>
+                >
+                  Start now!
+                </Button>
+
+                <p className="font-semibold mb-4">Features included in the package:</p>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  {service.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="mr-2 mt-1 h-4 w-4 shrink-0 text-accent" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </Label>
+        </div>
+      ))}
+    </RadioGroup>
   );
 }

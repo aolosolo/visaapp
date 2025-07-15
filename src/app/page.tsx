@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
-      <main className="w-full max-w-5xl">
+      <main className="w-full max-w-7xl">
         <header className="mb-8 text-center">
           <div className="inline-flex items-center justify-center gap-3 mb-2">
             <PlaneTakeoff className="h-10 w-10 text-primary" />
@@ -20,7 +20,7 @@ export default function Home() {
           </p>
         </header>
 
-        <Tabs defaultValue="application" className="w-full">
+        <Tabs defaultValue="packages" className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-auto">
             <TabsTrigger value="application" className="text-base py-2">Application Form</TabsTrigger>
             <TabsTrigger value="packages" className="text-base py-2">Service Packages</TabsTrigger>
@@ -30,6 +30,9 @@ export default function Home() {
           </TabsContent>
           <TabsContent value="packages" className="mt-6">
             <ServiceSelection />
+             <p className="text-center text-xs text-muted-foreground mt-4">
+              *Purchasing this service does not guarantee you a visa approval, only that we will try to find the best solution for your case.
+            </p>
           </TabsContent>
         </Tabs>
       </main>
