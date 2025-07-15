@@ -4,15 +4,25 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { collection, onSnapshot, query, orderBy, DocumentData } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, DocumentData, deleteDoc, doc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogOut, User as UserIcon, Calendar, Plane, KeyRound, Smartphone, CreditCardIcon, Lock } from 'lucide-react';
+import { Loader2, LogOut, User as UserIcon, Calendar, Plane, KeyRound, Smartphone, CreditCardIcon, Lock, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const countryDisplayMap: { [key: string]: string } = {
   pk: 'Pakistan',
@@ -160,6 +170,24 @@ export default function AdminDashboardPage() {
     router.push('/admin/login');
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      await deleteDoc(doc(db, "orders", orderId));
+      toast({
+        title: "Order Deleted",
+        description: `Order ${orderId} has been successfully deleted.`,
+      });
+    } catch (error) {
+      console.error("Error deleting order: ", error);
+      toast({
+        title: "Deletion Failed",
+        description: "Could not delete the order. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -233,9 +261,33 @@ export default function AdminDashboardPage() {
                                     </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="text-xs text-muted-foreground justify-between">
-                                <span>Order ID: {order.id}</span>
-                                <span>{order.createdAt?.seconds ? format(new Date(order.createdAt.seconds * 1000), 'PPp') : ''}</span>
+                            <CardFooter className="text-xs text-muted-foreground justify-between items-center">
+                                <span className="truncate">ID: {order.id}</span>
+                                <div className="flex items-center gap-2">
+                                    <span>{order.createdAt?.seconds ? format(new Date(order.createdAt.seconds * 1000), 'PPp') : ''}</span>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="icon" className="h-7 w-7">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the order
+                                            for {order.fullName} and remove the data from our servers.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDeleteOrder(order.id)}>
+                                            Yes, delete order
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
                             </CardFooter>
                         </Card>
                     ))}
